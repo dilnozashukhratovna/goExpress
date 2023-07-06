@@ -121,8 +121,8 @@ const getAdminById = async (req, res) => {
         admin WHERE id = $1`,
             [id]
         );
-        if (admin.length == 0) {
-            return res.admin(400).json("Bunday id'li admin topilamdi");
+        if (admin.rows.length === 0) {
+            return res.status(400).json("There is no admin with such Id");
         }
         res.status(200).json(admin.rows);
     } catch (error) {
@@ -133,7 +133,7 @@ const getAdminById = async (req, res) => {
 
 const getAdmins = async (req, res) => {
     try {
-        const admin = await pool.query(`select * from admin`);
+        const admin = await pool.query(`SELECT * FROM admin`);
         res.status(200).send(admin.rows);
     } catch (error) {
         res.status(500).json(`Server Error: ${error.message}`);
@@ -144,6 +144,9 @@ const deleteAdmin = async (req, res) => {
     try {
         const id = req.params.id;
         const admin = await pool.query(`DELETE FROM admin WHERE id = $1`, [id]);
+        if (admin.rowCount === 0) {
+            return res.status(400).json("There is no admin with such Id");
+        }
         res.status(200).json("Successfully deleted");
     } catch (error) {
         res.status(500).json(`Server Error: ${error.message}`);
@@ -192,7 +195,10 @@ const updateAdmin = async (req, res) => {
                 id,
             ]
         );
-        res.status(200).json("Admin successfully updated");
+        if (updatedOrder.rows.length === 0) {
+            return res.status(400).json("There is no admin with such Id");
+        }
+        res.status(200).json("Admin is successfully updated");
     } catch (error) {
         res.status(500).json(`Server Error: ${error.message}`);
         console.log(error);
