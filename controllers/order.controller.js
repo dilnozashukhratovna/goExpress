@@ -1,6 +1,8 @@
 const pool = require("../config/db");
 const uuid = require("uuid");
 const { orderValidation } = require("../validations/order.validation");
+const { errorHandler } = require("../helpers/error_handler");
+
 
 const addOrder = async (req, res) => {
     try {
@@ -40,7 +42,7 @@ const addOrder = async (req, res) => {
         console.log(newOrder);
         res.status(200).json(newOrder.rows);
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
         console.log(error);
     }
 };
@@ -56,7 +58,7 @@ const getOrderById = async (req, res) => {
         }
         res.status(200).json(order.rows);
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
         console.log(error);
     }
 };
@@ -66,7 +68,7 @@ const getOrders = async (req, res) => {
         const order = await pool.query(`SELECT * FROM orderr`);
         res.status(200).send(order.rows);
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
         console.log(error);
     }
 };
@@ -82,7 +84,7 @@ const deleteOrder = async (req, res) => {
         }
         res.status(200).json("Successfully deleted");
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
     }
 };
 
@@ -127,7 +129,7 @@ const updateOrder = async (req, res) => {
         }
         res.status(200).json(updatedOrder.rows);
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
         console.log(error);
     }
 };

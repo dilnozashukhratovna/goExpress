@@ -3,6 +3,8 @@ const myJwt = require("../services/JwtService");
 const bcrypt = require("bcrypt");
 const config = require("config");
 const { adminValidation } = require("../validations/admin.validation");
+const { errorHandler } = require("../helpers/error_handler");
+
 
 const addAdmin = async (req, res) => {
     try {
@@ -64,7 +66,7 @@ const addAdmin = async (req, res) => {
         console.log(newAdmin);
         res.status(200).json(newAdmin.rows);
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
         console.log(error);
     }
 };
@@ -107,18 +109,16 @@ const loginAdmin = async (req, res) => {
 
         res.status(200).send({ ...tokens });
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
         console.log(error);
     }
 };
-
 
 const getAdminById = async (req, res) => {
     try {
         const id = req.params.id;
         const admin = await pool.query(
-            `SELECT * FROM 
-        admin WHERE id = $1`,
+            `SELECT * FROM admin WHERE id = $1`,
             [id]
         );
         if (admin.rows.length === 0) {
@@ -126,7 +126,7 @@ const getAdminById = async (req, res) => {
         }
         res.status(200).json(admin.rows);
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
         console.log(error);
     }
 };
@@ -136,7 +136,7 @@ const getAdmins = async (req, res) => {
         const admin = await pool.query(`SELECT * FROM admin`);
         res.status(200).send(admin.rows);
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
     }
 };
 
@@ -149,7 +149,7 @@ const deleteAdmin = async (req, res) => {
         }
         res.status(200).json("Successfully deleted");
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
     }
 };
 
@@ -200,7 +200,7 @@ const updateAdmin = async (req, res) => {
         }
         res.status(200).json("Admin is successfully updated");
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
         console.log(error);
     }
 };

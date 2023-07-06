@@ -1,5 +1,7 @@
 const pool = require("../config/db");
 const {statusValidation} = require("../validations/status.validation");
+const { errorHandler } = require("../helpers/error_handler");
+
 
 const addStatus = async (req, res) => {
     try {
@@ -19,7 +21,7 @@ const addStatus = async (req, res) => {
         console.log(newStatus);
         res.status(200).json(newStatus.rows);
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
         console.log(error);
     }
 };
@@ -35,7 +37,7 @@ const getStatusById = async (req, res) => {
         }
         res.status(200).json(status.rows);
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
         console.log(error);
     }
 };
@@ -45,7 +47,7 @@ const getStatuses = async (req, res) => {
         const status = await pool.query(`SELECT * FROM status`);
         res.status(200).send(status.rows);
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
     }
 };
 
@@ -60,7 +62,7 @@ const deleteStatus = async (req, res) => {
         }
         res.status(200).json("Successfully deleted");
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
     }
 };
 
@@ -85,7 +87,7 @@ const updateStatus = async (req, res) => {
         }
         res.status(200).json(status.rows);
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
         console.log(error);
     }
 };

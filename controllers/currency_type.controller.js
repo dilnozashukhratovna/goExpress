@@ -1,5 +1,7 @@
 const pool = require("../config/db");
 const {currencyTypeValidation} = require("../validations/currency_type.validation");
+const { errorHandler } = require("../helpers/error_handler");
+
 
 const addCurrency_type = async (req, res) => {
     try {
@@ -19,7 +21,7 @@ const addCurrency_type = async (req, res) => {
         console.log(newCurrency_type);
         res.status(200).json(newCurrency_type.rows);
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
         console.log(error);
     }
 };
@@ -36,7 +38,7 @@ const getCurrency_typeById = async (req, res) => {
         }
         res.status(200).json(currency_type.rows);
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
         console.log(error);
     }
 };
@@ -46,7 +48,7 @@ const getCurrency_types = async (req, res) => {
         const currency_type = await pool.query(`SELECT * FROM currency_type`);
         res.status(200).send(currency_type.rows);
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
     }
 };
 
@@ -62,7 +64,7 @@ const deleteCurrency_type = async (req, res) => {
         }
         res.status(200).json("Successfully deleted");
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
     }
 };
 
@@ -88,7 +90,7 @@ const updateCurrency_type = async (req, res) => {
         }
         res.status(200).json(currency_type.rows);
     } catch (error) {
-        res.status(500).json(`Server Error: ${error.message}`);
+        errorHandler(res, error);
         console.log(error);
     }
 };
