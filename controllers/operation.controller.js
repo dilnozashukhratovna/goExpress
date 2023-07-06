@@ -8,18 +8,19 @@ const addOperation = async (req, res) => {
             return res.status(400).send(error.details[0].message);
         }
 
-        const { order_id, status_id, operation_date, admin_id, description } =
+        const { order_id, status_id, admin_id, description } =
             value;
 
         const newOperation = await pool.query(
-            `INSERT INTO operation (order_id, status_id, operation_date, admin_id, description) 
-      VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-            [order_id, status_id, operation_date, admin_id, description]
+            `INSERT INTO operation (order_id, status_id, admin_id, description) 
+      VALUES ($1, $2, $3, $4) RETURNING *`,
+            [order_id, status_id, admin_id, description]
         );
 
         console.log(newOperation.rows);
         res.status(200).json(newOperation.rows);
     } catch (error) {
+        console.log(error);
         res.status(500).json(`Server Error: ${error.message}`);
     }
 };
@@ -48,8 +49,12 @@ const getOperationById = async (req, res) => {
 const updateOperation = async (req, res) => {
     try {
         const id = req.params.id;
+        const { error, value } = operationValidation(req.body);
+        if (error) {
+            return res.status(400).send(error.details[0].message);
+        }
         const { order_id, status_id, operation_date, admin_id, description } =
-            req.body;
+            value;
 
         const operation = await pool.query(
             `
