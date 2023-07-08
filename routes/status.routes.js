@@ -8,11 +8,13 @@ const {
 } = require("../controllers/status.controller");
 
 const router = Router();
+const adminPolice = require("../middleware/adminPolice");
+const creatorPolice = require("../middleware/creatorPolice");
 
-router.post("/", addStatus);
-router.get("/", getStatuses);
-router.get("/:id", getStatusById);
-router.put("/:id", updateStatus);
-router.delete("/:id", deleteStatus);
+router.post("/", creatorPolice, addStatus);
+router.get("/", adminPolice, getStatuses);
+router.get("/:id", adminPolice, getStatusById);
+router.put("/:id", creatorPolice, updateStatus);
+router.delete("/:id", creatorPolice, deleteStatus);
 
 module.exports = router;

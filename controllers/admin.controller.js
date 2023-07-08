@@ -5,13 +5,13 @@ const config = require("config");
 const { adminValidation } = require("../validations/admin.validation");
 const { errorHandler } = require("../helpers/error_handler");
 
-
 const addAdmin = async (req, res) => {
     try {
         const { error, value } = adminValidation(req.body);
         if (error) {
             return res.status(400).send(error.details[0].message);
         }
+
         const {
             full_name,
             user_name,
@@ -24,31 +24,37 @@ const addAdmin = async (req, res) => {
             description,
         } = value;
 
-        const existingAdmin = await pool.query(
-            `SELECT * FROM admin WHERE email = $1;`,
+        const adminExists = await pool.query(
+            "SELECT * FROM admin WHERE email = $1",
             [email]
         );
-        if (existingAdmin.rows.length > 0) {
+
+        if (adminExists.rows.length > 0) {
             return res
                 .status(409)
                 .json({ message: "Admin with this email already exists" });
         }
 
+        const adminRoles = is_creator
+            ? ["READ", "UPDATE", "DELETE", "WRITE"]
+            : ["READ", "UPDATE"];
+
         const payload = {
-            email: email,
-            tg_link: tg_link,
-            is_active: is_active,
+            id: req.params.id,
             is_creator: is_creator,
+            adminRoles: adminRoles,
+            is_active: is_active,
         };
 
         const tokens = myJwt.generateTokens(payload);
-        const hashed_token = bcrypt.hashSync(tokens.refreshToken, 7);
         const hashedPassword = await bcrypt.hash(hashed_password, 7);
+        const hashedToken = bcrypt.hashSync(tokens.refreshToken, 7);
 
         const newAdmin = await pool.query(
             `
-        INSERT INTO admin (full_name, user_name, hashed_password, phone_number,email,tg_link,hashed_token,is_creator,is_active,description)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *
+            INSERT INTO admin (full_name, user_name, hashed_password, phone_number, email, tg_link, hashed_token, is_creator, is_active, description)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            RETURNING *
         `,
             [
                 full_name,
@@ -57,13 +63,18 @@ const addAdmin = async (req, res) => {
                 phone_number,
                 email,
                 tg_link,
-                hashed_token,
+                hashedToken,
                 is_creator,
                 is_active,
                 description,
             ]
         );
-        console.log(newAdmin);
+
+        res.cookie("refreshToken", tokens.refreshToken, {
+            maxAge: config.get("refresh_ms"),
+            httpOnly: true,
+        });
+
         res.status(200).json(newAdmin.rows);
     } catch (error) {
         errorHandler(res, error);
@@ -86,15 +97,26 @@ const loginAdmin = async (req, res) => {
                 .status(400)
                 .send({ message: "Email or password is incorrect" });
 
-        const hashedPassword = admin.rows[0].hashed_password; 
+        const hashedPassword = admin.rows[0].hashed_password;
         if (!bcrypt.compareSync(hashed_password, hashedPassword))
             return res
                 .status(400)
                 .send({ message: "Email or password is incorrect" });
 
+        const id = admin.rows[0].id;
+        console.log(id);
+        const is_creator = admin.rows[0].is_creator;
+        console.log(is_creator);
+        const is_active = admin.rows[0].is_active;
+        console.log(is_active);
+
+        const adminRoles = is_creator
+            ? ["READ", "UPDATE", "DELETE", "WRITE"]
+            : ["READ", "UPDATE"];
         const payload = {
-            email: email,
-            tg_link: admin.rows[0].tg_link,
+            is_creator: is_creator,
+            adminRoles: adminRoles,
+            is_active: is_active,
         };
 
         const tokens = myJwt.generateTokens(payload);
@@ -117,10 +139,9 @@ const loginAdmin = async (req, res) => {
 const getAdminById = async (req, res) => {
     try {
         const id = req.params.id;
-        const admin = await pool.query(
-            `SELECT * FROM admin WHERE id = $1`,
-            [id]
-        );
+        const admin = await pool.query(`SELECT * FROM admin WHERE id = $1`, [
+            id,
+        ]);
         if (admin.rows.length === 0) {
             return res.status(400).json("There is no admin with such Id");
         }
@@ -205,6 +226,37 @@ const updateAdmin = async (req, res) => {
     }
 };
 
+const logoutAdmin = async (req, res) => {
+    const { refreshToken } = req.cookies;
+    let admin;
+
+    if (!refreshToken)
+        return res.status(400).send({ message: "Token is not found" });
+
+    try {
+        const queryResult = await pool.query(
+            `
+            UPDATE admin
+            SET hashed_token = ''
+            WHERE hashed_token = $1
+            RETURNING *
+        `,
+            [refreshToken]
+        );
+
+        if (queryResult.rowCount === 0)
+            return res.status(400).send({ message: "Token is not found" });
+
+        admin = queryResult.rows[0];
+
+        res.clearCookie("refreshToken");
+        return res.status(200).send({ admin });
+    } catch (error) {
+        errorHandler(res, error);
+        console.log(error);
+    }
+};
+
 module.exports = {
     getAdminById,
     addAdmin,
@@ -212,4 +264,5 @@ module.exports = {
     updateAdmin,
     deleteAdmin,
     loginAdmin,
+    logoutAdmin,
 };

@@ -8,12 +8,13 @@ const {
 } = require("../controllers/order.controller");
 
 const router = Router();
+const adminPolice = require("../middleware/adminPolice");
+const creatorPolice = require("../middleware/creatorPolice");
 
-router.post("/", addOrder);
-router.get("/", getOrders);
-router.get("/:id", getOrderById);
-router.put("/:id", updateOrder);
-router.delete("/:id", deleteOrder);
+router.post("/", creatorPolice, addOrder);
+router.get("/", adminPolice, getOrders);
+router.get("/:id", adminPolice, getOrderById);
+router.put("/:id", creatorPolice, updateOrder);
+router.delete("/:id", creatorPolice, deleteOrder);
 
 module.exports = router;
-
