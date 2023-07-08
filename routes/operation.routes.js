@@ -11,10 +11,10 @@ const router = Router();
 const adminPolice = require("../middleware/adminPolice");
 const creatorPolice = require("../middleware/creatorPolice");
 
-router.post("/", creatorPolice, addOperation);
+router.post("/", adminPolice, addOperation);
 router.get("/", adminPolice, getOperations);
 router.get("/:id", adminPolice, getOperationById);
-router.put("/:id", creatorPolice, updateOperation);
-router.delete("/:id", creatorPolice, deleteOperation);
+router.put("/:id", adminPolice, updateOperation);
+router.delete("/:id", adminPolice, deleteOperation);
 
 module.exports = router;
